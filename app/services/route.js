@@ -13,32 +13,27 @@ export async function GET(request) {
       const { searchParams } = new URL(request.url)
       const category = searchParams.get("category")
       const query = searchParams.get("query")
-  
-      // Build the SQL query based on filters
-      let sqlQuery = "SELECT * FROM services"
+
+      // Build the SQL query dynamically using parameterization
+      let baseQuery = sql`SELECT * FROM services`
+      const conditions = []
       const params = []
-  
-      if (category || query) {
-        sqlQuery += " WHERE"
-  
-        if (category) {
-          sqlQuery += " category = $1"
-          params.push(category)
-        }
-  
-        if (query) {
-          if (category) {
-            sqlQuery += " AND"
-          }
-          sqlQuery += ` (title ILIKE $${params.length + 1} OR description ILIKE $${params.length + 1})`
-          params.push(`%${query}%`)
-        }
+
+      if (category) {
+        conditions.push(sql`category = ${category}`)
       }
-  
-      sqlQuery += " ORDER BY created_at DESC"
-  
-      const services = await sql`${sqlQuery}`
-  
+
+      if (query) {
+        conditions.push(sql`(title ILIKE ${`%${query}%`} OR description ILIKE ${`%${query}%`})`)
+      }
+
+      if (conditions.length > 0) {
+        baseQuery = sql`${baseQuery} WHERE ${sql.join(conditions, sql` AND `)}`
+      }
+
+      const finalQuery = sql`${baseQuery} ORDER BY created_at DESC`
+      const services = await finalQuery
+
       return NextResponse.json(services || [])
     } catch (error) {
       console.error("Error fetching services:", error)
