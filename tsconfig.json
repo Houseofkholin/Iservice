@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "target": "ES6",
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/api/auth/register/route.js", "lib/db-utils.js", "lib/db-client.js", "lib/schema.js", "lib/seed-db.js", "components/auth-modal.jsx", "app/register/page.jsx", "components/ui/alert.jsx", "components/ui/input.jsx", "components/ui/sheet.jsx", "components/ui/dialog.jsx", "app/services/create/page.jsx", "components/ui/textarea.jsx", "components/ui/select.jsx", "components/ui/card.jsx", "components/user-account-nav.jsx", "components/ui/avatar.tsx", "app/dashboard/page.jsx", "app/api/users/me/route.js", "components/ui/tabs.jsx"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  location      String?
+  bio           String?
+  walletAddress String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts  Account[]
+  sessions  Session[]
+  services  Service[]
+  bids      Bid[]
+  reviews   Review[]
+  contracts Contract[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Category {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  slug          String      @unique
+  description   String?
+  icon          String?
+  parentId      String?
+  parent        Category?   @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  subcategories Category[]  @relation("CategoryToSubcategory")
+  services      Service[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Service {
+  id               String    @id @default(cuid())
+  title            String
+  description      String
+  longDescription  String?   @db.Text
+  price            Float
+  deliveryTime     String
+  revisions        String?
+  skills           String[]
+  requirements     String?
+  serviceType      String?
+  location         String?
+  rating           Float     @default(0)
+  status           String    @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  blockchainId     String?
+  transactionHash  String?
+  providerId       String
+  categoryId       String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  provider  User      @relation(fields: [providerId], references: [id])
+  category  Category  @relation(fields: [categoryId], references: [id])
+  images    Image[]
+  bids      Bid[]
+  reviews   Review[]
+  contracts Contract[]
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bid {
+  id              String    @id @default(cuid())
+  amount          Float
+  message         String?
+  status          String    @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  transactionHash String?
+  serviceId       String
+  userId          String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  service   Service   @relation(fields: [serviceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  contract  Contract?
+}
+
+model Contract {
+  id              String    @id @default(cuid())
+  status          String    @default("ACTIVE") // ACTIVE, COMPLETED, DISPUTED, CANCELLED
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  transactionHash String?
+  serviceId       String
+  providerId      String
+  clientId        String
+  bidId           String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  service   Service  @relation(fields: [serviceId], references: [id])
+  provider  User     @relation("ProviderContracts", fields: [providerId], references: [id])
+  client    User     @relation("ClientContracts", fields: [clientId], references: [id])
+  bid       Bid      @relation(fields: [bidId], references: [id])
+  reviews   Review[]
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  rating      Int
+  comment     String?
+  serviceId   String
+  userId      String
+  contractId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  service   Service   @relation(fields: [serviceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  contract  Contract? @relation(fields: [contractId], references: [id])
+}
+
